@@ -19,13 +19,13 @@ public partial class Review
 
     public string? OwnerReply { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public DateTime UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public virtual BookingRequest? Booking { get; set; }
+    public virtual BookingRequest? BookingRequest { get; set; }
 
     public virtual Hostel Hostel { get; set; } = null!;
 
-    public virtual User Tenant { get; set; } = null!;
+    public virtual Tenant Tenant { get; set; } = null!;
 }

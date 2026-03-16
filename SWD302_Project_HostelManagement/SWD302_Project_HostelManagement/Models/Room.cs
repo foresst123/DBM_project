@@ -23,19 +23,19 @@ public partial class Room
 
     public int? Floor { get; set; }
 
-    public string Status { get; set; } = null!;
+    public string Status { get; set; } = "Available";
 
     public string? Description { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public DateTime UpdatedAt { get; set; }
-
-    public virtual ICollection<BookingRequest> BookingRequests { get; set; } = new List<BookingRequest>();
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public virtual Hostel Hostel { get; set; } = null!;
 
-    public virtual User Owner { get; set; } = null!;
+    public virtual HostelOwner Owner { get; set; } = null!;
+
+    public virtual ICollection<BookingRequest> BookingRequests { get; set; } = new List<BookingRequest>();
 
     public virtual ICollection<RoomUpdateLog> RoomUpdateLogs { get; set; } = new List<RoomUpdateLog>();
 }

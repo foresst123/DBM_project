@@ -15,5 +15,5 @@ public partial class Favorite
 
     public virtual Hostel Hostel { get; set; } = null!;
 
-    public virtual User Tenant { get; set; } = null!;
+    public virtual Tenant Tenant { get; set; } = null!;
 }

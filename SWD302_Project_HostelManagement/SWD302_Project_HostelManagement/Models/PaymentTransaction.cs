@@ -17,13 +17,13 @@ public partial class PaymentTransaction
 
     public string? GatewayRef { get; set; }
 
-    public string Status { get; set; } = null!;
+    public string Status { get; set; } = "Pending";
 
     public DateTime? PaidAt { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public virtual BookingRequest Booking { get; set; } = null!;
+    public virtual BookingRequest BookingRequest { get; set; } = null!;
 
-    public virtual User Tenant { get; set; } = null!;
+    public virtual Tenant Tenant { get; set; } = null!;
 }

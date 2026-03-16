@@ -7,9 +7,9 @@ public partial class ViolationReport
 {
     public int ReportId { get; set; }
 
-    public int ReporterId { get; set; }
+    public int ReporterTenantId { get; set; }
 
-    public int? ReportedUserId { get; set; }
+    public int? ReportedAccountId { get; set; }
 
     public int? HostelId { get; set; }
 
@@ -17,15 +17,15 @@ public partial class ViolationReport
 
     public string? Evidence { get; set; }
 
-    public string Status { get; set; } = null!;
+    public string Status { get; set; } = "Pending";
 
-    public DateTime CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     public DateTime? ResolvedDate { get; set; }
 
     public virtual Hostel? Hostel { get; set; }
 
-    public virtual User? ReportedUser { get; set; }
+    public virtual Account? ReportedAccount { get; set; }
 
-    public virtual User Reporter { get; set; } = null!;
+    public virtual Tenant Reporter { get; set; } = null!;
 }

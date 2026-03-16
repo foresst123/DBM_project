@@ -11,17 +11,17 @@ public partial class RoomUpdateLog
 
     public int? BookingId { get; set; }
 
-    public int? ChangedBy { get; set; }
+    public int? ChangedByOwnerId { get; set; }
 
     public string StatusBefore { get; set; } = null!;
 
     public string StatusAfter { get; set; } = null!;
 
-    public DateTime ChangedAt { get; set; }
+    public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
 
-    public virtual BookingRequest? Booking { get; set; }
+    public virtual BookingRequest? BookingRequest { get; set; }
 
-    public virtual User? ChangedByNavigation { get; set; }
+    public virtual HostelOwner? ChangedBy { get; set; }
 
     public virtual Room Room { get; set; } = null!;
 }

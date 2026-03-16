@@ -17,11 +17,11 @@ public partial class Notification
 
     public string? Type { get; set; }
 
-    public string Status { get; set; } = null!;
+    public string Status { get; set; } = "Pending";
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? SentAt { get; set; }
 
-    public virtual BookingRequest? Booking { get; set; }
+    public virtual BookingRequest? BookingRequest { get; set; }
 }
