@@ -1,16 +1,32 @@
 ﻿@model IEnumerable<SWD302_Project_HostelManagement.Models.BookingRequest>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Booking Requests";
 }
 
-<h1>Index</h1>
+<h1>Booking Requests</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@* <p>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+</p> *@
+<table class="table table-striped">
+    <thead class="table-dark">
         <tr>
             <th>
                 @Html.DisplayNameFor(model => model.RequestType)
@@ -28,18 +44,12 @@
                 @Html.DisplayNameFor(model => model.RejectReason)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CreatedDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedDate)
-            </th>
-            <th>
                 @Html.DisplayNameFor(model => model.Room)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Tenant)
             </th>
-            <th></th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -55,27 +65,43 @@
                 @Html.DisplayFor(modelItem => item.EndDate)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Status)
+                @if (item.Status == "Pending")
+                {
+                    <span class="badge bg-warning text-dark">Pending</span>
+                }
+                else if (item.Status == "Approved")
+                {
+                    <span class="badge bg-success">Approved</span>
+                }
+                else if (item.Status == "Rejected")
+                {
+                    <span class="badge bg-danger">Rejected</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">@item.Status</span>
+                }
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.RejectReason)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CreatedDate)
+                @Html.DisplayFor(modelItem => item.Room.RoomNumber)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.UpdatedDate)
+                @Html.DisplayFor(modelItem => item.Tenant.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Room.RoomId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Tenant.TenantId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.BookingId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.BookingId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.BookingId">Delete</a>
+                <a asp-action="Details" asp-route-id="@item.BookingId" class="btn btn-sm btn-info">Details</a>
+                @if (item.Status == "Pending")
+                {
+                    <form asp-action="Approve" asp-route-id="@item.BookingId" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Approve this booking?')">Approve</button>
+                    </form>
+                    <a asp-action="Reject" asp-route-id="@item.BookingId" class="btn btn-sm btn-warning">Reject</a>
+                }
+                @* <a asp-action="Edit" asp-route-id="@item.BookingId" class="btn btn-sm btn-secondary">Edit</a> | *@
+                @* <a asp-action="Delete" asp-route-id="@item.BookingId" class="btn btn-sm btn-danger">Delete</a> *@
             </td>
         </tr>
 }

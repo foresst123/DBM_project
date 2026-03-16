@@ -1,0 +1,58 @@
+@model SWD302_Project_HostelManagement.Models.BookingRequest
+
+@{
+    ViewData["Title"] = "Reject Booking";
+}
+
+<h1>Reject Booking Request</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Booking Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Booking ID</dt>
+                    <dd class="col-sm-9">@Model.BookingId</dd>
+
+                    <dt class="col-sm-3">Tenant Name</dt>
+                    <dd class="col-sm-9">@Model.Tenant.Name</dd>
+
+                    <dt class="col-sm-3">Room Number</dt>
+                    <dd class="col-sm-9">@Model.Room.RoomNumber</dd>
+
+                    <dt class="col-sm-3">Request Type</dt>
+                    <dd class="col-sm-9">@Model.RequestType</dd>
+
+                    <dt class="col-sm-3">Check-in Date</dt>
+                    <dd class="col-sm-9">@Model.StartDate?.ToString("yyyy-MM-dd")</dd>
+
+                    <dt class="col-sm-3">Check-out Date</dt>
+                    <dd class="col-sm-9">@Model.EndDate?.ToString("yyyy-MM-dd")</dd>
+
+                    <dt class="col-sm-3">Current Status</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge bg-warning text-dark">@Model.Status</span>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <form asp-action="Reject" asp-route-id="@Model.BookingId" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label for="rejectReason" class="form-label">Rejection Reason <span class="text-danger">*</span></label>
+                <textarea id="rejectReason" name="rejectReason" class="form-control" rows="4" required></textarea>
+                <small class="form-text text-muted">Please provide a clear reason for rejecting this booking request.</small>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
