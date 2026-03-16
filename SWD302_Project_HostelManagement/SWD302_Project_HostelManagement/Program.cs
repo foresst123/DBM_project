@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 namespace SWD302_Project_HostelManagement
@@ -32,6 +33,18 @@ namespace SWD302_Project_HostelManagement
                 );
             });
 
+            // ===== ADD COOKIE AUTHENTICATION =====
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Auth/Login";
+                    options.LogoutPath = "/Auth/Logout";
+                    options.AccessDeniedPath = "/Auth/AccessDenied";
+                    options.ExpireTimeSpan = TimeSpan.FromDays(1);
+                });
+
+            builder.Services.AddAuthorization();
+
             var app = builder.Build();
 
             // Seed data chỉ chạy trong môi trường Development
@@ -53,6 +66,8 @@ namespace SWD302_Project_HostelManagement
 
             app.UseRouting();
 
+            // ===== ADD AUTHENTICATION & AUTHORIZATION MIDDLEWARE =====
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(
