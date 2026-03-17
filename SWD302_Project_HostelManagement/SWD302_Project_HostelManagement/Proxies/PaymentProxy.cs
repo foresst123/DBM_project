@@ -1,115 +1,96 @@
-using System.Text;
-using System.Text.Json;
+using SWD302_Project_HostelManagement.VNPay;
 
-namespace SWD302_Project_HostelManagement.Proxies
+namespace SWD302_Project_HostelManagement.Proxies;
+
+/// <summary>
+/// PaymentProxy - External Interface Class
+/// Information Hiding: Abstracts complexity of payment gateway integration
+/// Responsibilities:
+///   - Validate input parameters
+///   - Forward requests to external Payment Gateway (VNPay)
+///   - Handle gateway communication and responses
+///   - Log transactions
+/// 
+/// COMET Pattern: M6-M8
+///   M6: Request forwarded to Payment Gateway
+///   M7: Payment Gateway returns result
+///   M8: Result returned to PaymentCoordinator
+/// </summary>
+public class PaymentProxy
 {
-    public class PaymentProxy
+    private readonly ILogger<PaymentProxy> _logger;
+
+    public PaymentProxy(ILogger<PaymentProxy> logger)
     {
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<PaymentProxy> _logger;
+        _logger = logger;
+    }
 
-        public PaymentProxy(IConfiguration configuration, ILogger<PaymentProxy> logger)
+    /// <summary>
+    /// Initiates a payment transaction via external Payment Gateway (VNPay)
+    /// 
+    /// M6: Chuyển tiếp sang external actor: Payment Gateway
+    /// </summary>
+    /// <param name="bookingId">Booking identifier (must be > 0)</param>
+    /// <param name="amount">Payment amount in VND (must be > 0)</param>
+    /// <returns>Payment URL string to redirect user to VNPay</returns>
+    /// <exception cref="ArgumentException">If bookingId or amount is invalid</exception>
+    public string InitiateTransaction(int bookingId, decimal amount)
+    {
+        try
         {
-            _configuration = configuration;
-            _logger = logger;
+            // Precondition: Validate input parameters
+            if (bookingId <= 0)
+            {
+                _logger.LogError("Invalid bookingId: {BookingId}", bookingId);
+                throw new ArgumentException("bookingId must be greater than 0", nameof(bookingId));
+            }
+
+            if (amount <= 0)
+            {
+                _logger.LogError("Invalid amount: {Amount}", amount);
+                throw new ArgumentException("amount must be greater than 0", nameof(amount));
+            }
+
+            _logger.LogInformation(
+                "M6: Initiating payment transaction to Payment Gateway: bookingId={BookingId}, amount={Amount}",
+                bookingId, amount);
+
+            // M6: Forward to Payment Gateway (external actor)
+            // VNPayHelper.CreatePaymentUrl() communicates with external VNPay service
+            string paymentUrl = VNPayHelper.CreatePaymentUrl(
+                amount,
+                bookingId,
+                $"Booking #{bookingId} Payment"
+            );
+
+            if (string.IsNullOrWhiteSpace(paymentUrl))
+            {
+                _logger.LogError(
+                    "M7A.1: Payment Gateway failed to generate payment URL for bookingId={BookingId}",
+                    bookingId);
+                throw new InvalidOperationException("Failed to generate payment URL from VNPay");
+            }
+
+            // M7 [Successful]: Payment Gateway returned payment URL
+            _logger.LogInformation(
+                "M7: Payment Gateway confirmed: payment URL generated for booking {BookingId}",
+                bookingId);
+
+            // M8: Return result to PaymentCoordinator
+            return paymentUrl;
         }
-
-        /// <summary>
-        /// Initiates a payment transaction via external Payment Gateway
-        /// </summary>
-        /// <param name="bookingId">The booking ID</param>
-        /// <param name="amount">The amount to be paid</param>
-        /// <returns>"Success" if initiated successfully, "Failed" otherwise</returns>
-        public string InitiateTransaction(int bookingId, decimal amount)
+        catch (ArgumentException ex)
         {
-            try
-            {
-                // Validate input
-                if (bookingId <= 0 || amount <= 0)
-                {
-                    _logger.LogError("Invalid bookingId or amount: bookingId={BookingId}, amount={Amount}", 
-                        bookingId, amount);
-                    return "Failed";
-                }
-
-                // Forward to Payment Gateway (external actor)
-                return SendToPaymentGateway(bookingId, amount);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error initiating transaction for bookingId={BookingId}", bookingId);
-                return "Failed";
-            }
+            _logger.LogError(ex, "Input validation error for bookingId={BookingId}, amount={Amount}",
+                bookingId, amount);
+            throw;
         }
-
-        /// <summary>
-        /// Sends payment request to Payment Gateway (VNPAY)
-        /// </summary>
-        private string SendToPaymentGateway(int bookingId, decimal amount)
+        catch (Exception ex)
         {
-            try
-            {
-                // Read configuration
-                string gatewayUrl = _configuration["PaymentSettings:GatewayUrl"];
-                string apiKey = _configuration["PaymentSettings:ApiKey"];
-
-                if (string.IsNullOrWhiteSpace(gatewayUrl) || string.IsNullOrWhiteSpace(apiKey))
-                {
-                    _logger.LogError("Payment gateway configuration is incomplete");
-                    return "Failed";
-                }
-
-                // Create HttpClient directly (NOT injected)
-                using var httpClient = new HttpClient();
-
-                // Prepare request payload
-                var payload = new
-                {
-                    bookingId = bookingId,
-                    amount = amount,
-                    timestamp = DateTime.UtcNow
-                };
-
-                var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(payload),
-                    Encoding.UTF8,
-                    "application/json"
-                );
-
-                // Add API key header
-                httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-
-                // Send POST request to payment gateway
-                var response = httpClient.PostAsync(
-                    $"{gatewayUrl}/processTransaction",
-                    jsonContent
-                ).Result;
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _logger.LogInformation(
-                        "Payment gateway accepted transaction: bookingId={BookingId}, amount={Amount}",
-                        bookingId, amount);
-                    return "Success";
-                }
-                else
-                {
-                    _logger.LogError(
-                        "Payment gateway rejected transaction: bookingId={BookingId}, statusCode={StatusCode}",
-                        bookingId, response.StatusCode);
-                    return "Failed";
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "HTTP error communicating with payment gateway");
-                return "Failed";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error sending to payment gateway");
-                return "Failed";
-            }
+            _logger.LogError(ex,
+                "M7A.1: Error communicating with Payment Gateway for bookingId={BookingId}",
+                bookingId);
+            throw;
         }
     }
 }

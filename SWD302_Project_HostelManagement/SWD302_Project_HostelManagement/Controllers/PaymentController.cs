@@ -83,16 +83,37 @@ public class PaymentController : Controller
             }
 
             // M5→M8: Call PaymentProxy → Payment Gateway
-            string paymentUrl = _paymentProxy.InitiateTransaction(bookingId, amount);
-
-            if (string.IsNullOrEmpty(paymentUrl))
+            // PaymentProxy.InitiateTransaction() forwards to external VNPay
+            // Returns: Payment URL if successful, throws exception if failed
+            string paymentUrl;
+            try
             {
-                _logger.LogError("Cannot create payment URL for booking {BookingId}", bookingId);
-                TempData["Error"] = "Cannot connect to Payment Gateway.";
+                paymentUrl = _paymentProxy.InitiateTransaction(bookingId, amount);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "Invalid payment parameters: bookingId={BookingId}, amount={Amount}",
+                    bookingId, amount);
+                TempData["Error"] = "Invalid payment parameters.";
+                return RedirectToAction("BookingRequestIndex", "Tenant");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Payment Gateway error for booking {BookingId}", bookingId);
+                TempData["Error"] = "Cannot connect to Payment Gateway. Please try again later.";
                 return RedirectToAction("BookingRequestIndex", "Tenant");
             }
 
-            _logger.LogInformation("Redirecting to Payment Gateway for booking {BookingId}", bookingId);
+            if (string.IsNullOrEmpty(paymentUrl))
+            {
+                _logger.LogError("Payment URL is null or empty for booking {BookingId}", bookingId);
+                TempData["Error"] = "Cannot create payment URL.";
+                return RedirectToAction("BookingRequestIndex", "Tenant");
+            }
+
+            _logger.LogInformation(
+                "M8: Redirecting to Payment Gateway for booking {BookingId}. URL: {PaymentUrl}",
+                bookingId, paymentUrl);
 
             // Redirect browser to Payment Gateway (VNPay)
             return Redirect(paymentUrl);
@@ -112,6 +133,19 @@ public class PaymentController : Controller
     // Process payment result: success → update status, send email
     //                         failure → create notification, send email
     // ================================================================
+
+    /// <summary>
+    /// VNPay callback endpoint (matches ReturnUrl in appsettings.json)
+    /// Routes to ProcessPaymentResult for actual processing
+    /// </summary>
+    [HttpGet("VNPayReturn")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VNPayReturn()
+    {
+        _logger.LogInformation("VNPayReturn callback received with query: {Query}", Request.QueryString);
+        return await ProcessPaymentResult();
+    }
+
     [HttpGet("ProcessPaymentResult")]
     [AllowAnonymous]
     public async Task<IActionResult> ProcessPaymentResult()
