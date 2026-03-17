@@ -3,19 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SWD302_Project_HostelManagement.Data;
 using SWD302_Project_HostelManagement.Models;
-using SWD302_Project_HostelManagement.Proxies;
 
 namespace SWD302_Project_HostelManagement.Controllers
 {
     public class TenantController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly PaymentProxy _paymentProxy;
 
-        public TenantController(AppDbContext context, PaymentProxy paymentProxy)
+        public TenantController(AppDbContext context)
         {
             _context = context;
-            _paymentProxy = paymentProxy;
         }
 
         /// <summary>
@@ -95,51 +92,6 @@ namespace SWD302_Project_HostelManagement.Controllers
 
             TempData["Success"] = "Booking created. Please proceed to payment.";
             return RedirectToAction("BookingRequestIndex");
-        }
-
-        /// <summary>
-        /// POST: Tenant/InitiatePayment
-        /// Tenant clicks "Pay Now" → Call PaymentProxy → Payment Gateway
-        /// → Redirect to PaymentController.ProcessPaymentResult
-        /// </summary>
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> InitiatePayment(int bookingId, decimal amount)
-        {
-            var tenantId = await GetCurrentTenantIdAsync();
-            if (tenantId == null)
-                return RedirectToAction("Index", "Home");
-
-            // Only get booking that belongs to the current logged-in Tenant
-            var booking = await _context.BookingRequests
-                .FirstOrDefaultAsync(b => b.BookingId == bookingId
-                                       && b.TenantId == tenantId);
-            if (booking == null)
-            {
-                TempData["Error"] = "Booking not found.";
-                return RedirectToAction("BookingRequestIndex");
-            }
-
-            if (booking.Status != "Pending Payment")
-            {
-                TempData["Error"] = "This booking is not eligible for payment.";
-                return RedirectToAction("BookingRequestIndex");
-            }
-
-            // Call PaymentProxy → Payment Gateway
-            var transactionStatus = _paymentProxy.InitiateTransaction(bookingId, amount);
-
-            // Redirect to PaymentController to process the result
-            return RedirectToAction(
-                "ProcessPaymentResult",
-                "Payment",
-                new
-                {
-                    bookingId = bookingId,
-                    transactionStatus = transactionStatus,
-                    amountPaid = amount
-                }
-            );
         }
     }
 }

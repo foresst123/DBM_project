@@ -12,13 +12,13 @@ public partial class BookingRequest
 
     public int TenantId { get; set; }
 
-    public string RequestType { get; set; } = "Booking";
+    public string RequestType { get; set; }
 
     public DateOnly? StartDate { get; set; }
 
     public DateOnly? EndDate { get; set; }
 
-    public string Status { get; set; } = "Pending";
+    public string Status { get; set; }
 
     public string? RejectReason { get; set; }
 

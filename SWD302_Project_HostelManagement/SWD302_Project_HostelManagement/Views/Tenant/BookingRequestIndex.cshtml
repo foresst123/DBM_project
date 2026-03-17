@@ -58,7 +58,7 @@
                     <td>
                         @if (booking.Status == "PendingPayment")
                         {
-                            <form asp-controller="Tenant"
+                            <form asp-controller="Payment"
                                   asp-action="InitiatePayment"
                                   method="post"
                                   style="display:inline;">
