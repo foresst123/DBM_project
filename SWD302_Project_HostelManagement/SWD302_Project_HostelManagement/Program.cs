@@ -13,8 +13,8 @@ namespace SWD302_Project_HostelManagement
             builder.Services.AddControllersWithViews();
 
             // Register custom services
-            builder.Services.AddScoped<SWD302_Project_HostelManagement.Services.EmailDeliveryService>();
             builder.Services.AddScoped<SWD302_Project_HostelManagement.Proxies.EmailProxy>();
+            builder.Services.AddScoped<SWD302_Project_HostelManagement.Proxies.PaymentProxy>();
 
             // Add DbContext - Choose database provider based on environment
             builder.Services.AddDbContext<SWD302_Project_HostelManagement.Data.AppDbContext>(options =>
@@ -50,6 +50,9 @@ namespace SWD302_Project_HostelManagement
             builder.Services.AddAuthorization();
 
             var app = builder.Build();
+
+            // ===== INITIALIZE VNPAY CONFIGURATION =====
+            SWD302_Project_HostelManagement.VNPay.VNPayConfig.Initialize(builder.Configuration);
 
             // Seed data chỉ chạy trong môi trường Development
             if (app.Environment.IsDevelopment())

@@ -24,4 +24,26 @@ public partial class Notification
     public DateTime? SentAt { get; set; }
 
     public virtual BookingRequest? BookingRequest { get; set; }
+
+    /// <summary>
+    /// Creates a new Notification record
+    /// </summary>
+    /// <param name="bookingId">The booking ID associated with this notification</param>
+    /// <param name="recipientEmail">The email address of the recipient</param>
+    /// <param name="subject">The subject/type of notification</param>
+    /// <returns>A new Notification instance</returns>
+    public static Notification CreateRecord(int bookingId, string recipientEmail, string subject)
+    {
+        return new Notification
+        {
+            BookingId = bookingId,
+            RecipientEmail = recipientEmail,
+            Subject = subject,
+            MessageContent = "",
+            Type = subject,
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+    }
 }
+

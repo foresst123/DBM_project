@@ -16,8 +16,6 @@ public partial class AppDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Account> Accounts { get; set; }
-
     public virtual DbSet<Tenant> Tenants { get; set; }
 
     public virtual DbSet<HostelOwner> HostelOwners { get; set; }
@@ -44,23 +42,20 @@ public partial class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Account entity configuration
-        modelBuilder.Entity<Account>(entity =>
+        // Tenant entity configuration
+        modelBuilder.Entity<Tenant>(entity =>
         {
-            entity.HasKey(e => e.AccountId).HasName("PK_Account");
-            entity.ToTable("Account");
-            entity.HasIndex(e => e.Email, "UX_Account_Email").IsUnique();
+            entity.HasKey(e => e.TenantId).HasName("PK_Tenant");
+            entity.ToTable("Tenant");
+            entity.HasIndex(e => e.Email, "UX_Tenant_Email").IsUnique();
 
-            entity.Property(e => e.AccountId)
-                .HasColumnName("account_id");
+            entity.Property(e => e.TenantId)
+                .HasColumnName("tenant_id");
             entity.Property(e => e.Email)
                 .HasMaxLength(150)
                 .HasColumnName("email");
             entity.Property(e => e.PasswordHash)
                 .HasColumnName("password_hash");
-            entity.Property(e => e.Role)
-                .HasMaxLength(20)
-                .HasColumnName("role");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValueSql("'Active'")
@@ -70,19 +65,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("GETUTCDATE()")
                 .HasColumnName("created_date");
-        });
-
-        // Tenant entity (TPT - Table Per Type from Account)
-        modelBuilder.Entity<Tenant>(entity =>
-        {
-            entity.HasKey(e => e.TenantId).HasName("PK_Tenant");
-            entity.ToTable("Tenant");
-            entity.HasIndex(e => e.AccountId, "UX_Tenant_AccountId").IsUnique();
-
-            entity.Property(e => e.TenantId)
-                .HasColumnName("tenant_id");
-            entity.Property(e => e.AccountId)
-                .HasColumnName("account_id");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
@@ -93,24 +75,33 @@ public partial class AppDbContext : DbContext
                 .HasMaxLength(50)
                 .HasColumnName("identity_card");
 
-            entity.HasOne(d => d.Account)
-                .WithOne(a => a.Tenant)
-                .HasForeignKey<Tenant>(d => d.AccountId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_Tenant_Account");
+            entity.HasCheckConstraint("CK_Tenant_Status",
+                "[status] IN ('Active', 'Inactive', 'Banned')");
         });
 
-        // HostelOwner entity (TPT - Table Per Type from Account)
+        // HostelOwner entity configuration
         modelBuilder.Entity<HostelOwner>(entity =>
         {
             entity.HasKey(e => e.OwnerId).HasName("PK_HostelOwner");
             entity.ToTable("HostelOwner");
-            entity.HasIndex(e => e.AccountId, "UX_HostelOwner_AccountId").IsUnique();
+            entity.HasIndex(e => e.Email, "UX_HostelOwner_Email").IsUnique();
 
             entity.Property(e => e.OwnerId)
                 .HasColumnName("owner_id");
-            entity.Property(e => e.AccountId)
-                .HasColumnName("account_id");
+            entity.Property(e => e.Email)
+                .HasMaxLength(150)
+                .HasColumnName("email");
+            entity.Property(e => e.PasswordHash)
+                .HasColumnName("password_hash");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValueSql("'Active'")
+                .HasColumnName("status");
+            entity.Property(e => e.AvatarUrl)
+                .HasColumnName("avatar_url");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("GETUTCDATE()")
+                .HasColumnName("created_date");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
@@ -121,33 +112,39 @@ public partial class AppDbContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("business_license");
 
-            entity.HasOne(d => d.Account)
-                .WithOne(a => a.HostelOwner)
-                .HasForeignKey<HostelOwner>(d => d.AccountId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_HostelOwner_Account");
+            entity.HasCheckConstraint("CK_HostelOwner_Status",
+                "[status] IN ('Active', 'Inactive', 'Banned')");
         });
 
-        // Admin entity (TPT - Table Per Type from Account)
+        // Admin entity configuration
         modelBuilder.Entity<Admin>(entity =>
         {
             entity.HasKey(e => e.AdminId).HasName("PK_Admin");
             entity.ToTable("Admin");
-            entity.HasIndex(e => e.AccountId, "UX_Admin_AccountId").IsUnique();
+            entity.HasIndex(e => e.Email, "UX_Admin_Email").IsUnique();
 
             entity.Property(e => e.AdminId)
                 .HasColumnName("admin_id");
-            entity.Property(e => e.AccountId)
-                .HasColumnName("account_id");
+            entity.Property(e => e.Email)
+                .HasMaxLength(150)
+                .HasColumnName("email");
+            entity.Property(e => e.PasswordHash)
+                .HasColumnName("password_hash");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValueSql("'Active'")
+                .HasColumnName("status");
+            entity.Property(e => e.AvatarUrl)
+                .HasColumnName("avatar_url");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("GETUTCDATE()")
+                .HasColumnName("created_date");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
 
-            entity.HasOne(d => d.Account)
-                .WithOne(a => a.Admin)
-                .HasForeignKey<Admin>(d => d.AccountId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_Admin_Account");
+            entity.HasCheckConstraint("CK_Admin_Status",
+                "[status] IN ('Active', 'Inactive', 'Banned')");
         });
 
         // Hostel entity
@@ -465,8 +462,8 @@ public partial class AppDbContext : DbContext
                 .HasColumnName("report_id");
             entity.Property(e => e.ReporterTenantId)
                 .HasColumnName("reporter_tenant_id");
-            entity.Property(e => e.ReportedAccountId)
-                .HasColumnName("reported_account_id");
+            entity.Property(e => e.ReportedTenantId)
+                .HasColumnName("reported_tenant_id");
             entity.Property(e => e.HostelId)
                 .HasColumnName("hostel_id");
             entity.Property(e => e.Reason)
@@ -489,11 +486,11 @@ public partial class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.NoAction)
                 .HasConstraintName("FK_ViolationReport_Reporter");
 
-            entity.HasOne(d => d.ReportedAccount)
-                .WithMany(a => a.ViolationReportedAccounts)
-                .HasForeignKey(d => d.ReportedAccountId)
+            entity.HasOne(d => d.ReportedTenant)
+                .WithMany(t => t.ReportedViolations)
+                .HasForeignKey(d => d.ReportedTenantId)
                 .OnDelete(DeleteBehavior.NoAction)
-                .HasConstraintName("FK_ViolationReport_ReportedAccount");
+                .HasConstraintName("FK_ViolationReport_ReportedTenant");
 
             entity.HasOne(d => d.Hostel)
                 .WithMany()
@@ -546,12 +543,16 @@ public partial class AppDbContext : DbContext
         });
 
         // ===== CHECK CONSTRAINTS for SQL Server =====
-        modelBuilder.Entity<Account>()
-            .HasCheckConstraint("CK_Account_Role",
-                "[role] IN ('Guest', 'Tenant', 'HostelOwner', 'Admin')");
+        modelBuilder.Entity<Tenant>()
+            .HasCheckConstraint("CK_Tenant_Status",
+                "[status] IN ('Active', 'Inactive', 'Banned')");
 
-        modelBuilder.Entity<Account>()
-            .HasCheckConstraint("CK_Account_Status",
+        modelBuilder.Entity<HostelOwner>()
+            .HasCheckConstraint("CK_HostelOwner_Status",
+                "[status] IN ('Active', 'Inactive', 'Banned')");
+
+        modelBuilder.Entity<Admin>()
+            .HasCheckConstraint("CK_Admin_Status",
                 "[status] IN ('Active', 'Inactive', 'Banned')");
 
         modelBuilder.Entity<Hostel>()

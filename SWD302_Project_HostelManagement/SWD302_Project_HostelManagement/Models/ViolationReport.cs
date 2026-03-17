@@ -9,7 +9,7 @@ public partial class ViolationReport
 
     public int ReporterTenantId { get; set; }
 
-    public int? ReportedAccountId { get; set; }
+    public int? ReportedTenantId { get; set; }
 
     public int? HostelId { get; set; }
 
@@ -25,7 +25,7 @@ public partial class ViolationReport
 
     public virtual Hostel? Hostel { get; set; }
 
-    public virtual Account? ReportedAccount { get; set; }
+    public virtual Tenant? ReportedTenant { get; set; }
 
     public virtual Tenant Reporter { get; set; } = null!;
 }

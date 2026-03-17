@@ -12,8 +12,8 @@ using SWD302_Project_HostelManagement.Data;
 namespace SWD302_Project_HostelManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260316161506_InitTPTEntityDesign")]
-    partial class InitTPTEntityDesign
+    [Migration("20260317154811_InitNewSchema")]
+    partial class InitNewSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,14 +25,14 @@ namespace SWD302_Project_HostelManagement.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("SWD302_Project_HostelManagement.Models.Account", b =>
+            modelBuilder.Entity("SWD302_Project_HostelManagement.Models.Admin", b =>
                 {
-                    b.Property<int>("AccountId")
+                    b.Property<int>("AdminId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("account_id");
+                        .HasColumnName("admin_id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AccountId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AdminId"));
 
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("nvarchar(max)")
@@ -50,16 +50,16 @@ namespace SWD302_Project_HostelManagement.Migrations
                         .HasColumnType("nvarchar(150)")
                         .HasColumnName("email");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("name");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("password_hash");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("role");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -69,46 +69,16 @@ namespace SWD302_Project_HostelManagement.Migrations
                         .HasColumnName("status")
                         .HasDefaultValueSql("'Active'");
 
-                    b.HasKey("AccountId")
-                        .HasName("PK_Account");
-
-                    b.HasIndex(new[] { "Email" }, "UX_Account_Email")
-                        .IsUnique();
-
-                    b.ToTable("Account", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_Account_Role", "[role] IN ('Guest', 'Tenant', 'HostelOwner', 'Admin')");
-
-                            t.HasCheckConstraint("CK_Account_Status", "[status] IN ('Active', 'Inactive', 'Banned')");
-                        });
-                });
-
-            modelBuilder.Entity("SWD302_Project_HostelManagement.Models.Admin", b =>
-                {
-                    b.Property<int>("AdminId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("admin_id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AdminId"));
-
-                    b.Property<int>("AccountId")
-                        .HasColumnType("int")
-                        .HasColumnName("account_id");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("name");
-
                     b.HasKey("AdminId")
                         .HasName("PK_Admin");
 
-                    b.HasIndex(new[] { "AccountId" }, "UX_Admin_AccountId")
+                    b.HasIndex(new[] { "Email" }, "UX_Admin_Email")
                         .IsUnique();
 
-                    b.ToTable("Admin", (string)null);
+                    b.ToTable("Admin", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Admin_Status", "[status] IN ('Active', 'Inactive', 'Banned')");
+                        });
                 });
 
             modelBuilder.Entity("SWD302_Project_HostelManagement.Models.BookingRequest", b =>
@@ -295,14 +265,26 @@ namespace SWD302_Project_HostelManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OwnerId"));
 
-                    b.Property<int>("AccountId")
-                        .HasColumnType("int")
-                        .HasColumnName("account_id");
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("avatar_url");
 
                     b.Property<string>("BusinessLicense")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("business_license");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("email");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -310,18 +292,34 @@ namespace SWD302_Project_HostelManagement.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("name");
 
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("password_hash");
+
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("phone_number");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("status")
+                        .HasDefaultValueSql("'Active'");
+
                     b.HasKey("OwnerId")
                         .HasName("PK_HostelOwner");
 
-                    b.HasIndex(new[] { "AccountId" }, "UX_HostelOwner_AccountId")
+                    b.HasIndex(new[] { "Email" }, "UX_HostelOwner_Email")
                         .IsUnique();
 
-                    b.ToTable("HostelOwner", (string)null);
+                    b.ToTable("HostelOwner", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_HostelOwner_Status", "[status] IN ('Active', 'Inactive', 'Banned')");
+                        });
                 });
 
             modelBuilder.Entity("SWD302_Project_HostelManagement.Models.Notification", b =>
@@ -658,9 +656,21 @@ namespace SWD302_Project_HostelManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TenantId"));
 
-                    b.Property<int>("AccountId")
-                        .HasColumnType("int")
-                        .HasColumnName("account_id");
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("avatar_url");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("email");
 
                     b.Property<string>("IdentityCard")
                         .HasMaxLength(50)
@@ -673,18 +683,34 @@ namespace SWD302_Project_HostelManagement.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("name");
 
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("password_hash");
+
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("phone_number");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("status")
+                        .HasDefaultValueSql("'Active'");
+
                     b.HasKey("TenantId")
                         .HasName("PK_Tenant");
 
-                    b.HasIndex(new[] { "AccountId" }, "UX_Tenant_AccountId")
+                    b.HasIndex(new[] { "Email" }, "UX_Tenant_Email")
                         .IsUnique();
 
-                    b.ToTable("Tenant", (string)null);
+                    b.ToTable("Tenant", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Tenant_Status", "[status] IN ('Active', 'Inactive', 'Banned')");
+                        });
                 });
 
             modelBuilder.Entity("SWD302_Project_HostelManagement.Models.ViolationReport", b =>
@@ -715,9 +741,9 @@ namespace SWD302_Project_HostelManagement.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("reason");
 
-                    b.Property<int?>("ReportedAccountId")
+                    b.Property<int?>("ReportedTenantId")
                         .HasColumnType("int")
-                        .HasColumnName("reported_account_id");
+                        .HasColumnName("reported_tenant_id");
 
                     b.Property<int>("ReporterTenantId")
                         .HasColumnType("int")
@@ -740,7 +766,7 @@ namespace SWD302_Project_HostelManagement.Migrations
 
                     b.HasIndex("HostelId");
 
-                    b.HasIndex("ReportedAccountId");
+                    b.HasIndex("ReportedTenantId");
 
                     b.HasIndex("ReporterTenantId");
 
@@ -748,18 +774,6 @@ namespace SWD302_Project_HostelManagement.Migrations
                         {
                             t.HasCheckConstraint("CK_ViolationReport_Status", "[status] IN ('Pending', 'Resolved', 'Dismissed')");
                         });
-                });
-
-            modelBuilder.Entity("SWD302_Project_HostelManagement.Models.Admin", b =>
-                {
-                    b.HasOne("SWD302_Project_HostelManagement.Models.Account", "Account")
-                        .WithOne("Admin")
-                        .HasForeignKey("SWD302_Project_HostelManagement.Models.Admin", "AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Admin_Account");
-
-                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("SWD302_Project_HostelManagement.Models.BookingRequest", b =>
@@ -814,18 +828,6 @@ namespace SWD302_Project_HostelManagement.Migrations
                         .HasConstraintName("FK_Hostel_HostelOwner");
 
                     b.Navigation("Owner");
-                });
-
-            modelBuilder.Entity("SWD302_Project_HostelManagement.Models.HostelOwner", b =>
-                {
-                    b.HasOne("SWD302_Project_HostelManagement.Models.Account", "Account")
-                        .WithOne("HostelOwner")
-                        .HasForeignKey("SWD302_Project_HostelManagement.Models.HostelOwner", "AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_HostelOwner_Account");
-
-                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("SWD302_Project_HostelManagement.Models.Notification", b =>
@@ -938,18 +940,6 @@ namespace SWD302_Project_HostelManagement.Migrations
                     b.Navigation("Room");
                 });
 
-            modelBuilder.Entity("SWD302_Project_HostelManagement.Models.Tenant", b =>
-                {
-                    b.HasOne("SWD302_Project_HostelManagement.Models.Account", "Account")
-                        .WithOne("Tenant")
-                        .HasForeignKey("SWD302_Project_HostelManagement.Models.Tenant", "AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Tenant_Account");
-
-                    b.Navigation("Account");
-                });
-
             modelBuilder.Entity("SWD302_Project_HostelManagement.Models.ViolationReport", b =>
                 {
                     b.HasOne("SWD302_Project_HostelManagement.Models.Hostel", "Hostel")
@@ -958,11 +948,11 @@ namespace SWD302_Project_HostelManagement.Migrations
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("FK_ViolationReport_Hostel");
 
-                    b.HasOne("SWD302_Project_HostelManagement.Models.Account", "ReportedAccount")
-                        .WithMany("ViolationReportedAccounts")
-                        .HasForeignKey("ReportedAccountId")
+                    b.HasOne("SWD302_Project_HostelManagement.Models.Tenant", "ReportedTenant")
+                        .WithMany("ReportedViolations")
+                        .HasForeignKey("ReportedTenantId")
                         .OnDelete(DeleteBehavior.NoAction)
-                        .HasConstraintName("FK_ViolationReport_ReportedAccount");
+                        .HasConstraintName("FK_ViolationReport_ReportedTenant");
 
                     b.HasOne("SWD302_Project_HostelManagement.Models.Tenant", "Reporter")
                         .WithMany("ViolationReports")
@@ -973,20 +963,9 @@ namespace SWD302_Project_HostelManagement.Migrations
 
                     b.Navigation("Hostel");
 
-                    b.Navigation("ReportedAccount");
+                    b.Navigation("ReportedTenant");
 
                     b.Navigation("Reporter");
-                });
-
-            modelBuilder.Entity("SWD302_Project_HostelManagement.Models.Account", b =>
-                {
-                    b.Navigation("Admin");
-
-                    b.Navigation("HostelOwner");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("ViolationReportedAccounts");
                 });
 
             modelBuilder.Entity("SWD302_Project_HostelManagement.Models.BookingRequest", b =>
@@ -1026,6 +1005,8 @@ namespace SWD302_Project_HostelManagement.Migrations
                     b.Navigation("Favorites");
 
                     b.Navigation("PaymentTransactions");
+
+                    b.Navigation("ReportedViolations");
 
                     b.Navigation("Reviews");
 

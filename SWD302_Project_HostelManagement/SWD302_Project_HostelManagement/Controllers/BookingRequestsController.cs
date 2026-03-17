@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,7 +36,6 @@ namespace SWD302_Project_HostelManagement.Controllers
             var appDbContext = _context.BookingRequests
                 .Include(b => b.Room)
                 .Include(b => b.Tenant)
-                    .ThenInclude(t => t.Account)
                 .Where(b => b.Room.OwnerId == ownerId);
             return View(await appDbContext.ToListAsync());
         }
@@ -68,7 +67,6 @@ namespace SWD302_Project_HostelManagement.Controllers
             var booking = await _context.BookingRequests
                 .Include(b => b.Room)
                 .Include(b => b.Tenant)
-                    .ThenInclude(t => t.Account)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 
             // if booking.isPending() then
@@ -79,45 +77,50 @@ namespace SWD302_Project_HostelManagement.Controllers
                 // if room.isAvailable() then
                 if (room != null && room.Status == "Available")
                 {
-                    booking.Status = "Approved";
-                    booking.UpdatedDate = DateTime.UtcNow;
+                    // booking.updateStatus("Approved")
+                    booking.UpdateStatus("Approved");
 
                     room.Status = "Occupied";
                     room.UpdatedAt = DateTime.UtcNow;
 
-                    var tenant = booking.Tenant;
-                    string email = tenant?.Account?.Email;
+                    // tenantId = booking.getTenantId()
+                    int tenantId = booking.GetTenantId();
 
-                    if (!string.IsNullOrWhiteSpace(email))
+                    // tenant = find Tenant by tenantId
+                    var tenant = await _context.Tenants
+                        .FirstOrDefaultAsync(t => t.TenantId == tenantId);
+
+                    if (tenant != null)
                     {
-                        // M9: Lưu Notification record
-                        var notification = new Notification
-                        {
-                            BookingId = booking.BookingId,
-                            RecipientEmail = email,
-                            Subject = $"Booking Approved - Room {booking.Room.RoomNumber}",
-                            MessageContent = $"Dear {booking.Tenant.Name}, your booking request for room {booking.Room.RoomNumber} has been approved.",
-                            Type = "BookingApproved",
-                            Status = "Pending",
-                            CreatedAt = DateTime.UtcNow
-                        };
-                        await _context.Notifications.AddAsync(notification);
-                        await _context.SaveChangesAsync();
+                        // email = tenant.getEmail()
+                        string email = tenant.GetEmail();
 
-                        // M10: Gửi email qua EmailProxy
-                        bool emailSent = _emailProxy.SendEmail(email, notification);
-
-                        if (emailSent)
+                        if (!string.IsNullOrWhiteSpace(email))
                         {
-                            notification.Status = "Sent";
-                            notification.SentAt = DateTime.UtcNow;
-                            _context.Notifications.Update(notification);
+                            // M9: Lưu Notification record
+                            // notification = Notification.createRecord(bookingId, email, "Booking Approved")
+                            var notification = Notification.CreateRecord(booking.BookingId, email, "Booking Approved");
+                            notification.MessageContent = $"Dear {tenant.Name}, your booking request for room {booking.Room.RoomNumber} has been approved.";
+                            
+                            await _context.Notifications.AddAsync(notification);
                             await _context.SaveChangesAsync();
-                            TempData["Success"] = $"Booking #{id} approved successfully and email sent to tenant.";
-                        }
-                        else
-                        {
-                            TempData["Warning"] = $"Booking #{id} approved, but email notification failed to send.";
+
+                            // M10: Gửi email qua EmailProxy
+                            // emailProxy.sendEmail(email, notification)
+                            bool emailSent = _emailProxy.SendEmail(email, notification);
+
+                            if (emailSent)
+                            {
+                                notification.Status = "Sent";
+                                notification.SentAt = DateTime.UtcNow;
+                                _context.Notifications.Update(notification);
+                                await _context.SaveChangesAsync();
+                                TempData["Success"] = $"Booking #{id} approved successfully and email sent to tenant.";
+                            }
+                            else
+                            {
+                                TempData["Warning"] = $"Booking #{id} approved, but email notification failed to send.";
+                            }
                         }
                     }
                 }
@@ -157,50 +160,54 @@ namespace SWD302_Project_HostelManagement.Controllers
             var booking = await _context.BookingRequests
                 .Include(b => b.Room)
                 .Include(b => b.Tenant)
-                    .ThenInclude(t => t.Account)
                 .FirstOrDefaultAsync(b => b.BookingId == id);
 
             // if booking.isPending() then
             if (booking != null && booking.Status == "Pending")
             {
-                booking.Status = "Rejected";
+                // booking.updateStatus("Rejected")
+                booking.UpdateStatus("Rejected");
                 booking.RejectReason = bookingRequest.RejectReason;
-                booking.UpdatedDate = DateTime.UtcNow;
 
-                var tenant = booking.Tenant;
-                string email = tenant?.Account?.Email;
+                // tenantId = booking.getTenantId()
+                int tenantId = booking.GetTenantId();
 
-                if (!string.IsNullOrWhiteSpace(email))
+                // tenant = find Tenant by tenantId
+                var tenant = await _context.Tenants
+                    .FirstOrDefaultAsync(t => t.TenantId == tenantId);
+
+                if (tenant != null)
                 {
-                    // M1A.6: Lưu Notification record
-                    // M1A.7: Notification xác nhận tạo thành công
-                    var notification = new Notification
-                    {
-                        BookingId = booking.BookingId,
-                        RecipientEmail = email,
-                        Subject = $"Booking Rejected - Room {booking.Room.RoomNumber}",
-                        MessageContent = $"Dear {booking.Tenant.Name}, your booking request has been rejected. Reason: {bookingRequest.RejectReason}",
-                        Type = "BookingRejected",
-                        Status = "Pending",
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    await _context.Notifications.AddAsync(notification);
-                    await _context.SaveChangesAsync();
+                    // email = tenant.getEmail()
+                    string email = tenant.GetEmail();
 
-                    // M1A.8: Gửi email qua EmailProxy
-                    bool emailSent = _emailProxy.SendEmail(email, notification);
-
-                    if (emailSent)
+                    if (!string.IsNullOrWhiteSpace(email))
                     {
-                        notification.Status = "Sent";
-                        notification.SentAt = DateTime.UtcNow;
-                        _context.Notifications.Update(notification);
+                        // M1A.6: Lưu Notification record
+                        // M1A.7: Notification xác nhận tạo thành công
+                        // notification = Notification.createRecord(bookingId, email, "Booking Rejected")
+                        var notification = Notification.CreateRecord(booking.BookingId, email, "Booking Rejected");
+                        notification.MessageContent = $"Dear {tenant.Name}, your booking request has been rejected. Reason: {bookingRequest.RejectReason}";
+                        
+                        await _context.Notifications.AddAsync(notification);
                         await _context.SaveChangesAsync();
-                        TempData["Success"] = $"Booking #{id} rejected and email sent to tenant.";
-                    }
-                    else
-                    {
-                        TempData["Warning"] = $"Booking #{id} rejected, but email notification failed to send.";
+
+                        // M1A.8: Gửi email qua EmailProxy
+                        // emailProxy.sendEmail(email, notification)
+                        bool emailSent = _emailProxy.SendEmail(email, notification);
+
+                        if (emailSent)
+                        {
+                            notification.Status = "Sent";
+                            notification.SentAt = DateTime.UtcNow;
+                            _context.Notifications.Update(notification);
+                            await _context.SaveChangesAsync();
+                            TempData["Success"] = $"Booking #{id} rejected and email sent to tenant.";
+                        }
+                        else
+                        {
+                            TempData["Warning"] = $"Booking #{id} rejected, but email notification failed to send.";
+                        }
                     }
                 }
             }
@@ -217,8 +224,6 @@ namespace SWD302_Project_HostelManagement.Controllers
         }
 
         // POST: BookingRequests/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("BookingId,RoomId,TenantId,RequestType,StartDate,EndDate,Status,RejectReason,CreatedDate,UpdatedDate")] BookingRequest bookingRequest)
@@ -253,8 +258,6 @@ namespace SWD302_Project_HostelManagement.Controllers
         }
 
         // POST: BookingRequests/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("BookingId,RoomId,TenantId,RequestType,StartDate,EndDate,Status,RejectReason,CreatedDate,UpdatedDate")] BookingRequest bookingRequest)

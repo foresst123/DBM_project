@@ -1,8 +1,50 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<SWD302_Project_HostelManagement.Models.Room>
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Home";
+    bool isTenant = User.IsInRole("Tenant");
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-4">
+    <h2>Available Rooms</h2>
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Room ID</th>
+                <th>Hostel</th>
+                <th>Price/Month</th>
+                <th>Status</th>
+                @if (isTenant)
+                {
+                    <th>Action</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var room in Model)
+            {
+                <tr>
+                    <td>@room.RoomId</td>
+                    <td>@room.Hostel?.Name</td>
+                    <td>@room.PricePerMonth.ToString("N0") VND</td>
+                    <td><span class="badge bg-success">@room.Status</span></td>
+                    @if (isTenant)
+                    {
+                        <td>
+                            <form asp-controller="Tenant"
+                                  asp-action="CreateBooking"
+                                  method="post"
+                                  style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="roomId" value="@room.RoomId" />
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    Book Now
+                                </button>
+                            </form>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>

@@ -7,46 +7,102 @@
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h4>Create New Account</h4>
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white text-center">
+                    <h4 class="mb-0">🏠 Create New Account</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
+
+                    @* Bước 1: Chọn Role *@
+                    <p class="text-center text-muted mb-3">
+                        <strong>Select your account type</strong>
+                    </p>
+
+                    <div class="d-flex justify-content-center gap-2 mb-4">
+                        <a asp-action="Register" asp-route-role="Tenant"
+                           class="btn @(Model.Role == "Tenant" ? "btn-primary" : "btn-outline-primary")">
+                            👤 Tenant
+                        </a>
+                        <a asp-action="Register" asp-route-role="HostelOwner"
+                           class="btn @(Model.Role == "HostelOwner" ? "btn-success" : "btn-outline-success")">
+                            🏡 Hostel Owner
+                        </a>
+                    </div>
+
+                    <hr />
+
+                    @* Bước 2: Form đăng ký *@
+                    <p class="text-center mb-3">
+                        Register as
+                        <strong class="
+                            @(Model.Role == "Tenant"      ? "text-primary"  :
+                                                            "text-success")">
+                            @Model.Role
+                        </strong>
+                    </p>
+
                     <form asp-action="Register" method="post">
-                        <div class="form-group mb-3">
-                            <label asp-for="Email" class="form-label">Email Address</label>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Role" />
+
+                        <div asp-validation-summary="All" class="alert alert-danger" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Email Address <span class="text-danger">*</span></label>
                             <input asp-for="Email" class="form-control" placeholder="Enter your email" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label asp-for="Password" class="form-label">Password</label>
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label">Password <span class="text-danger">*</span></label>
                             <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label asp-for="Name" class="form-label">Full Name</label>
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">Full Name <span class="text-danger">*</span></label>
                             <input asp-for="Name" class="form-control" placeholder="Enter your full name" />
-                            <span asp-validation-for="Name" class="text-danger"></span>
+                            <span asp-validation-for="Name" class="text-danger small"></span>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label asp-for="PhoneNumber" class="form-label">Phone Number (Optional)</label>
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
                             <input asp-for="PhoneNumber" class="form-control" placeholder="Enter your phone number" />
-                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                         </div>
 
-                        <div class="alert alert-danger" asp-validation-summary="All"></div>
+                        @* Tenant-specific field *@
+                        @if (Model.Role == "Tenant")
+                        {
+                            <div class="mb-3">
+                                <label asp-for="IdentityCard" class="form-label">Identity Card / Passport</label>
+                                <input asp-for="IdentityCard" class="form-control" placeholder="Enter your identity card number" />
+                                <span asp-validation-for="IdentityCard" class="text-danger small"></span>
+                            </div>
+                        }
+
+                        @* HostelOwner-specific field *@
+                        @if (Model.Role == "HostelOwner")
+                        {
+                            <div class="mb-3">
+                                <label asp-for="BusinessLicense" class="form-label">Business License <span class="text-danger">*</span></label>
+                                <input asp-for="BusinessLicense" class="form-control" placeholder="Enter your business license number" />
+                                <span asp-validation-for="BusinessLicense" class="text-danger small"></span>
+                            </div>
+                        }
 
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-success">Register</button>
+                            <button type="submit"
+                                    class="btn @(Model.Role == "Tenant" ? "btn-primary" : "btn-success")">
+                                Register as @Model.Role
+                            </button>
                         </div>
                     </form>
 
                     <div class="mt-3 text-center">
                         <p>Already have an account? <a asp-action="Login">Login here</a></p>
                     </div>
+
                 </div>
             </div>
         </div>

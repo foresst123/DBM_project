@@ -1,0 +1,87 @@
+@model IEnumerable<SWD302_Project_HostelManagement.Models.BookingRequest>
+@{
+    ViewData["Title"] = "My Booking Requests";
+}
+
+<div class="container mt-4">
+    <h2>My Booking Requests</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <a asp-action="Index" asp-controller="Home"
+       class="btn btn-secondary mb-3">← Back to Rooms</a>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Booking ID</th>
+                <th>Room</th>
+                <th>Hostel</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var booking in Model)
+            {
+                <tr>
+                    <td>@booking.BookingId</td>
+                    <td>@booking.Room?.RoomId</td>
+                    <td>@booking.Room?.Hostel?.Name</td>
+                    <td>@booking.RequestType</td>
+                    <td>
+                        @{
+                            var badgeClass = booking.Status switch
+                            {
+                                "PendingPayment" => "bg-warning text-dark",
+                                "DepositPaid" => "bg-success",
+                                "Approved" => "bg-primary",
+                                "Rejected" => "bg-danger",
+                                "Cancelled" => "bg-secondary",
+                                "Pending" => "bg-info",
+                                "Confirmed" => "bg-success",
+                                _ => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @badgeClass">@booking.Status</span>
+                    </td>
+                    <td>@booking.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        @if (booking.Status == "PendingPayment")
+                        {
+                            <form asp-controller="Tenant"
+                                  asp-action="InitiatePayment"
+                                  method="post"
+                                  style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="bookingId"
+                                       value="@booking.BookingId" />
+                                <input type="hidden"
+                                       name="amount"
+                                       value="@(booking.Room?.PricePerMonth ?? 0M)" />
+                                <button type="submit"
+                                        class="btn btn-success btn-sm">
+                                    💳 Pay Now
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

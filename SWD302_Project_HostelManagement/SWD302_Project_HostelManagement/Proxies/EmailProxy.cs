@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Mail;
 using SWD302_Project_HostelManagement.Models;
-using SWD302_Project_HostelManagement.Services;
 
 namespace SWD302_Project_HostelManagement.Proxies
 {
@@ -9,13 +8,11 @@ namespace SWD302_Project_HostelManagement.Proxies
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailProxy> _logger;
-        private readonly EmailDeliveryService _emailDeliveryService;
 
-        public EmailProxy(IConfiguration configuration, ILogger<EmailProxy> logger, EmailDeliveryService emailDeliveryService)
+        public EmailProxy(IConfiguration configuration, ILogger<EmailProxy> logger)
         {
             _configuration = configuration;
             _logger = logger;
-            _emailDeliveryService = emailDeliveryService;
         }
 
         /// <summary>
@@ -26,59 +23,71 @@ namespace SWD302_Project_HostelManagement.Proxies
         /// <returns>True if email sent successfully, false otherwise</returns>
         public bool SendEmail(string recipientEmail, Notification notification)
         {
-            // Validate email is not empty
-            if (string.IsNullOrWhiteSpace(recipientEmail))
+            // Validate input
+            if (string.IsNullOrWhiteSpace(recipientEmail) || !IsValidEmail(recipientEmail))
             {
-                _logger.LogError($"Invalid recipient email: {recipientEmail}");
+                _logger.LogError("Invalid recipient email: {Email}", recipientEmail);
                 return false;
             }
 
-            // Validate email format using MailAddress
-            try
-            {
-                var mailAddress = new MailAddress(recipientEmail);
-            }
-            catch (FormatException)
-            {
-                _logger.LogError($"Invalid email format: {recipientEmail}");
-                return false;
-            }
+            var messageContent = notification.MessageContent;
 
-            // Get message content from notification
-            string messageContent = notification.MessageContent;
-
-            // Validate notification content is not empty
             if (string.IsNullOrWhiteSpace(messageContent))
             {
                 _logger.LogError("Notification content is empty");
                 return false;
             }
 
-            // Forward to EmailDeliveryService (SMTP)
+            // Chuyển tiếp sang external actor: Email Delivery Service (SmtpClient)
+            return SendViaEmailDeliveryService(recipientEmail, notification.Subject, messageContent);
+        }
+
+        /// <summary>
+        /// Sends email via SMTP (Email Delivery Service)
+        /// </summary>
+        private bool SendViaEmailDeliveryService(string to, string subject, string body)
+        {
             try
             {
-                bool result = _emailDeliveryService.SendEmail(
-                    to: recipientEmail,
-                    subject: notification.Subject,
-                    body: messageContent
-                );
+                var smtpHost = _configuration["EmailSettings:SmtpHost"];
+                var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"]);
+                var senderEmail = _configuration["EmailSettings:SenderEmail"];
+                var senderPassword = _configuration["EmailSettings:SenderPassword"];
 
-                if (result)
+                // Email Delivery Service = SmtpClient (external actor)
+                using var smtpClient = new SmtpClient(smtpHost, smtpPort)
                 {
-                    _logger.LogInformation($"Email Delivery Service confirmed: sent to {recipientEmail}");
-                    return true;
-                }
-                else
-                {
-                    _logger.LogError($"Email Delivery Service returned failure for: {recipientEmail}");
-                    return false;
-                }
+                    Credentials = new NetworkCredential(senderEmail, senderPassword),
+                    EnableSsl = true,
+                    Timeout = 10000
+                };
+
+                smtpClient.Send(new MailMessage(senderEmail, to, subject, body) { IsBodyHtml = true });
+
+                _logger.LogInformation("Email Delivery Service confirmed: sent to {To}", to);
+                return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Exception occurred while sending email to {recipientEmail}: {ex.Message}");
+                _logger.LogError(ex, "Email Delivery Service returned failure for: {To}", to);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Validates email format
+        /// </summary>
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                return new MailAddress(email).Address == email;
+            }
+            catch
+            {
                 return false;
             }
         }
     }
 }
+

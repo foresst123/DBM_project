@@ -6,49 +6,28 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SWD302_Project_HostelManagement.Migrations
 {
     /// <inheritdoc />
-    public partial class InitTPTEntityDesign : Migration
+    public partial class InitNewSchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Account",
-                columns: table => new
-                {
-                    account_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    email = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    password_hash = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    role = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValueSql: "'Active'"),
-                    avatar_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Account", x => x.account_id);
-                    table.CheckConstraint("CK_Account_Role", "[role] IN ('Guest', 'Tenant', 'HostelOwner', 'Admin')");
-                    table.CheckConstraint("CK_Account_Status", "[status] IN ('Active', 'Inactive', 'Banned')");
-                });
-
             migrationBuilder.CreateTable(
                 name: "Admin",
                 columns: table => new
                 {
                     admin_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    account_id = table.Column<int>(type: "int", nullable: false),
+                    email = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    password_hash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValueSql: "'Active'"),
+                    avatar_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Admin", x => x.admin_id);
-                    table.ForeignKey(
-                        name: "FK_Admin_Account",
-                        column: x => x.account_id,
-                        principalTable: "Account",
-                        principalColumn: "account_id",
-                        onDelete: ReferentialAction.Cascade);
+                    table.CheckConstraint("CK_Admin_Status", "[status] IN ('Active', 'Inactive', 'Banned')");
                 });
 
             migrationBuilder.CreateTable(
@@ -57,7 +36,11 @@ namespace SWD302_Project_HostelManagement.Migrations
                 {
                     owner_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    account_id = table.Column<int>(type: "int", nullable: false),
+                    email = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    password_hash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValueSql: "'Active'"),
+                    avatar_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     phone_number = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     business_license = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
@@ -65,12 +48,7 @@ namespace SWD302_Project_HostelManagement.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_HostelOwner", x => x.owner_id);
-                    table.ForeignKey(
-                        name: "FK_HostelOwner_Account",
-                        column: x => x.account_id,
-                        principalTable: "Account",
-                        principalColumn: "account_id",
-                        onDelete: ReferentialAction.Cascade);
+                    table.CheckConstraint("CK_HostelOwner_Status", "[status] IN ('Active', 'Inactive', 'Banned')");
                 });
 
             migrationBuilder.CreateTable(
@@ -79,7 +57,11 @@ namespace SWD302_Project_HostelManagement.Migrations
                 {
                     tenant_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    account_id = table.Column<int>(type: "int", nullable: false),
+                    email = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    password_hash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValueSql: "'Active'"),
+                    avatar_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    created_date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     phone_number = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     identity_card = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true)
@@ -87,12 +69,7 @@ namespace SWD302_Project_HostelManagement.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tenant", x => x.tenant_id);
-                    table.ForeignKey(
-                        name: "FK_Tenant_Account",
-                        column: x => x.account_id,
-                        principalTable: "Account",
-                        principalColumn: "account_id",
-                        onDelete: ReferentialAction.Cascade);
+                    table.CheckConstraint("CK_Tenant_Status", "[status] IN ('Active', 'Inactive', 'Banned')");
                 });
 
             migrationBuilder.CreateTable(
@@ -191,7 +168,7 @@ namespace SWD302_Project_HostelManagement.Migrations
                     report_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     reporter_tenant_id = table.Column<int>(type: "int", nullable: false),
-                    reported_account_id = table.Column<int>(type: "int", nullable: true),
+                    reported_tenant_id = table.Column<int>(type: "int", nullable: true),
                     hostel_id = table.Column<int>(type: "int", nullable: true),
                     reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     evidence = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -210,10 +187,10 @@ namespace SWD302_Project_HostelManagement.Migrations
                         principalColumn: "hostel_id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_ViolationReport_ReportedAccount",
-                        column: x => x.reported_account_id,
-                        principalTable: "Account",
-                        principalColumn: "account_id");
+                        name: "FK_ViolationReport_ReportedTenant",
+                        column: x => x.reported_tenant_id,
+                        principalTable: "Tenant",
+                        principalColumn: "tenant_id");
                     table.ForeignKey(
                         name: "FK_ViolationReport_Reporter",
                         column: x => x.reporter_tenant_id,
@@ -385,15 +362,9 @@ namespace SWD302_Project_HostelManagement.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "UX_Account_Email",
-                table: "Account",
-                column: "email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "UX_Admin_AccountId",
+                name: "UX_Admin_Email",
                 table: "Admin",
-                column: "account_id",
+                column: "email",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -438,9 +409,9 @@ namespace SWD302_Project_HostelManagement.Migrations
                 column: "status");
 
             migrationBuilder.CreateIndex(
-                name: "UX_HostelOwner_AccountId",
+                name: "UX_HostelOwner_Email",
                 table: "HostelOwner",
-                column: "account_id",
+                column: "email",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -515,9 +486,9 @@ namespace SWD302_Project_HostelManagement.Migrations
                 column: "room_id");
 
             migrationBuilder.CreateIndex(
-                name: "UX_Tenant_AccountId",
+                name: "UX_Tenant_Email",
                 table: "Tenant",
-                column: "account_id",
+                column: "email",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -526,9 +497,9 @@ namespace SWD302_Project_HostelManagement.Migrations
                 column: "hostel_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ViolationReport_reported_account_id",
+                name: "IX_ViolationReport_reported_tenant_id",
                 table: "ViolationReport",
-                column: "reported_account_id");
+                column: "reported_tenant_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ViolationReport_reporter_tenant_id",
@@ -574,9 +545,6 @@ namespace SWD302_Project_HostelManagement.Migrations
 
             migrationBuilder.DropTable(
                 name: "HostelOwner");
-
-            migrationBuilder.DropTable(
-                name: "Account");
         }
     }
 }
